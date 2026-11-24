@@ -1,0 +1,25 @@
+/* Only the Burmese faces used by the UI. Latin text uses the system font. */
+@font-face {
+  font-family: "Noto Sans Myanmar";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("@fontsource/noto-sans-myanmar/files/noto-sans-myanmar-myanmar-500-normal.woff2")
+    format("woff2");
+}
+@font-face {
+  font-family: "Noto Sans Myanmar";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("@fontsource/noto-sans-myanmar/files/noto-sans-myanmar-myanmar-600-normal.woff2")
+    format("woff2");
+}
+@font-face {
+  font-family: "Noto Sans Myanmar";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("@fontsource/noto-sans-myanmar/files/noto-sans-myanmar-myanmar-700-normal.woff2")
+    format("woff2");
+}

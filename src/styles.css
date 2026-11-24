@@ -2453,8 +2453,8 @@ h1 em {
 
 /* Burmese needs more vertical room for stacked characters and natural spacing. */
 :root[lang="my"] {
-  --font-body: "Noto Sans Myanmar", "DM Sans", sans-serif;
-  --font-display: "Noto Sans Myanmar", "DM Sans", sans-serif;
+  --font-body: "Noto Sans Myanmar", system-ui, sans-serif;
+  --font-display: "Noto Sans Myanmar", system-ui, sans-serif;
   line-height: 1.8;
 }
 :root[lang="my"] :is(h1, h2) {

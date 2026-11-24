@@ -1,17 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { MotionConfig } from "motion/react";
-import "@fontsource/dm-sans/400.css";
-import "@fontsource/dm-sans/500.css";
-import "@fontsource/dm-sans/600.css";
-import "@fontsource/dm-sans/700.css";
-import "@fontsource/cormorant-garamond/500.css";
-import "@fontsource/cormorant-garamond/600.css";
-import "@fontsource/cormorant-garamond/500-italic.css";
-import "@fontsource/noto-sans-myanmar/myanmar-400.css";
-import "@fontsource/noto-sans-myanmar/myanmar-500.css";
-import "@fontsource/noto-sans-myanmar/myanmar-600.css";
-import "@fontsource/noto-sans-myanmar/myanmar-700.css";
+import "@app-fonts.css";
 import "./i18n";
 import App from "./App";
 import AppErrorBoundary from "./components/AppErrorBoundary";

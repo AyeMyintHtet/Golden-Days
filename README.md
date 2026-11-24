@@ -56,7 +56,7 @@ Use `"my"` for Burmese. Restart your development server after changing this sett
 - Components use `useTranslation`; formatted headings and instructions use `Trans`. Download helpers and the error boundary use the same i18n instance.
 - Navigation, sign-in, notifications, downloads, install/offline/update messages, media labels, and accessibility text use these translations. Counts use locale-aware number formatting. Keep matching keys and interpolation placeholders in both locale files when editing text.
 - The HTML language, page title, description, Apple home-screen name, and PWA manifest are generated from the same code setting in `vite.config.ts`.
-- Burmese uses locally bundled Noto Sans Myanmar with extra line height and natural letter spacing. Fonts and translation resources are part of the app shell and available offline after installation. No third-party font or translation service is contacted.
+- Burmese uses locally bundled Noto Sans Myanmar with extra line height and natural letter spacing. Only its three used normal weights (500, 600, 700) are included, as WOFF2 files; Latin device names use the system font. English uses Latin-only DM Sans (500, 600, 700) and Cormorant Garamond (500/600 normal and 500 italic), six WOFF2 files. `@app-fonts.css` resolves to the active language's file in `src/fonts/` through Vite, so the other language's fonts are not bundled. Weight 400, WOFF fallbacks, and unrelated script subsets are not imported or precached. No third-party font or translation service is contacted.
 
 Device/browser names are retained in the install instructions, alongside the browser's English menu labels to help families find those controls. Native video controls and third-party iframe contents follow their browser/provider language; the app's own player labels and messages are translated.
 
@@ -137,7 +137,7 @@ The mobile layout retains its glass bottom navigation. Desktop retains the sideb
 
 On Android/desktop, use the app's install button or supported browser menu. On iPhone/iPad, use Safari → Share → Add to Home Screen. Installation and production offline behavior require HTTPS. For a separate local PWA check, run `npm run dev:pwa` yourself; its default port is 5174.
 
-The service worker caches the app shell, local fonts, and icons. It saves media only after use, never the whole album in advance. Previously viewed eligible photos remain available offline on a previously signed-in device until the local session expires or data is removed. A visible offline notice remains in the album and viewer.
+The service worker caches the app shell, the active language's used WOFF2 fonts, and icons. Its font allowlist matches the selected language; it does not sweep up every font format or subset. Updated precache entries replace the previous font set when the new worker activates. After redeploying this change, accept the app update or close and reopen existing tabs so the new worker takes over. It saves media only after use, never the whole album in advance. Previously viewed eligible photos remain available offline on a previously signed-in device until the local session expires or data is removed. A visible offline notice remains in the album and viewer.
 
 | Saved media            | Bound                                |
 | ---------------------- | ------------------------------------ |

@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import { handleAlbumApi } from "./server/album-api";
@@ -6,6 +7,14 @@ import { APP_LANGUAGE, resources } from "./src/i18n/config";
 
 const browserTargets = ["chrome87", "edge88", "firefox78", "safari14"];
 const appText = resources[APP_LANGUAGE].translation.app;
+const fontPatterns =
+  APP_LANGUAGE === "my"
+    ? ["**/noto-sans-myanmar-myanmar-{500,600,700}-normal-*.woff2"]
+    : [
+        "**/dm-sans-latin-{500,600,700}-normal-*.woff2",
+        "**/cormorant-garamond-latin-{500,600}-normal-*.woff2",
+        "**/cormorant-garamond-latin-500-italic-*.woff2",
+      ];
 const htmlText: Record<string, string> = {
   __APP_LANGUAGE__: APP_LANGUAGE,
   __APP_NAME__: appText.name,
@@ -18,6 +27,13 @@ export default defineConfig(({ mode }) => {
   // assigned to Vite's `define` or exposed through a VITE_ secret.
   const env = { ...process.env, ...loadEnv(mode, process.cwd(), "") };
   return {
+    resolve: {
+      alias: {
+        "@app-fonts.css": fileURLToPath(
+          new URL(`./src/fonts/${APP_LANGUAGE}.css`, import.meta.url),
+        ),
+      },
+    },
     server: {
       host: true,
     },
@@ -98,8 +114,9 @@ export default defineConfig(({ mode }) => {
         },
         injectManifest: {
           target: browserTargets,
-          // Media is cached on demand by src/sw.ts, never during installation.
-          globPatterns: ["**/*.{js,css,html,woff,woff2}"],
+          // Precache only the active language's WOFF2 faces, without fallback
+          // formats or unrelated writing systems. Media stays on demand.
+          globPatterns: ["**/*.{js,css,html}", ...fontPatterns],
           globIgnores: [
             "images/**",
             "**/*.map",
