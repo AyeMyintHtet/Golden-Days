@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => {
   // assigned to Vite's `define` or exposed through a VITE_ secret.
   const env = { ...process.env, ...loadEnv(mode, process.cwd(), "") };
   return {
+    server: {
+      host: true,
+    },
     build: {
       target: browserTargets,
       rollupOptions: {

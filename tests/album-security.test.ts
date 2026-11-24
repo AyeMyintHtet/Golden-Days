@@ -78,13 +78,16 @@ function validSignature(link: string) {
   );
 }
 
-test("the 560 included files keep their numeric IDs and omit only video 327", () => {
-  assert.equal(media.length, 560);
-  assert.equal(media.filter((item) => item.file.endsWith(".webp")).length, 527);
-  assert.equal(media.filter((item) => item.file.endsWith(".mp4")).length, 33);
+test("numbered files retain stable IDs and omit video 327 when more files are added", () => {
+  assert.ok(media.length >= 560);
+  assert.equal(media[0].file, "1.mp4");
+  assert.equal(media[1].file, "2.mp4");
+  assert.equal(media[2].file, "3.webp");
+  const ids = media.map((item) => Number.parseInt(item.file));
+  assert.equal(new Set(ids).size, ids.length);
   assert.deepEqual(
-    media.map((item) => Number.parseInt(item.file)),
-    Array.from({ length: 561 }, (_, i) => i + 1).filter((id) => id !== 327),
+    ids,
+    Array.from({ length: Math.max(...ids) }, (_, i) => i + 1).filter((id) => id !== 327),
   );
 });
 
@@ -189,7 +192,7 @@ test("authenticated album responses are private and contain only correctly signe
   assert.equal(result.status, 200);
   assert.equal(result.headers["cache-control"], "private, no-cache");
   assert.equal(result.headers.vary, "Cookie");
-  assert.equal(result.body.length, 560);
+  assert.equal(result.body.length, media.length);
   const serialized = JSON.stringify(result.body);
   assert.ok(!serialized.includes(env.IMAGEKIT_PRIVATE_KEY));
   assert.ok(!serialized.includes(env.ALBUM_PASSWORD));

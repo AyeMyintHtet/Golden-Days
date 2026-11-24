@@ -266,6 +266,8 @@ function PrivateAlbumAccess({ children }: { children: ReactNode }) {
                 <input
                   id="family-password"
                   type="password"
+                  inputMode="numeric"
+                  enterKeyHint="go"
                   autoComplete="current-password"
                   required
                   maxLength={256}

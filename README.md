@@ -86,6 +86,14 @@ This records filenames and sizes without copying personal media into the project
 
 Reference: [Original delivery and attachment downloads](https://imagekit.io/docs/core-delivery-features).
 
+## Extra videos still on your phone
+
+1. AirDrop the originals into a separate folder on your Mac.
+2. Make H.264/AAC MP4 website copies, normally at 1080p/30 fps. On ImageKit Free, each video must be under 100 MB; the limit is per file. Keep the originals separate.
+3. Continue numbering from `562.mp4`. Do not rename the existing files or reuse `327`, which is intentionally excluded.
+4. Add the new numbered copies to the compiled folder and upload them to ImageKit under exactly the same filenames, with no random filename suffix. Stay within the account's total storage allowance.
+5. Run `npm run media:index -- /absolute/path/to/bkk-fam-after-compile` and redeploy the project. The gallery counts and filters update from the index, while existing favorite IDs remain unchanged.
+
 ## Loading animation and phone performance
 
 The featured gallery photo, active viewer, and album-opening state use the gold 3D postcard loader. Ordinary tiles retain inexpensive shimmer placeholders. Three.js loads only when a loader lasts over 250 ms; cached images avoid that download. The large 3D chunks are excluded from installation precaching.

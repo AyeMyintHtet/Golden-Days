@@ -26,10 +26,9 @@ export default function AboutAlbum({ onClose }: { onClose: () => void }) {
           little detours, and everything in between.
         </p>
         <div className="about-note">
-          <strong>You’re exploring a sample album.</strong>
+          <strong>Bangkok, together.</strong>
           <p>
-            These are public sample photos and a demo video, ready to make way
-            for our own Bangkok memories.
+            Photos, videos, and little moments from the days we spent together.
           </p>
         </div>
         <span className="about-signoff">
