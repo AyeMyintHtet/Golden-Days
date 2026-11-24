@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.sw.json --noEmit && tsc -p tsconfig.server.json --noEmit",
     "test:security": "node --import tsx --test tests/album-security.test.ts",
+    "test:api-runtime": "node scripts/check-api-runtime.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "media:thumbnails": "node scripts/create-thumbnails.mjs",
     "media:index": "node scripts/create-media-index.mjs",

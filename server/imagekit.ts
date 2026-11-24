@@ -1,6 +1,6 @@
 import ImageKit from "@imagekit/nodejs";
-import media from "./media-index.json";
-import type { AlbumEnvironment } from "./session";
+import media from "./media-index.json" with { type: "json" };
+import type { AlbumEnvironment } from "./session.js";
 
 export function createImageKitAlbum(env: AlbumEnvironment) {
   const imagekit = new ImageKit({ privateKey: env.IMAGEKIT_PRIVATE_KEY! });

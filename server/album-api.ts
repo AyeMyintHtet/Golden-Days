@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createImageKitAlbum } from "./imagekit";
-import { beginLoginAttempt } from "./login-attempts";
+import { createImageKitAlbum } from "./imagekit.js";
+import { beginLoginAttempt } from "./login-attempts.js";
 import {
   configurationReady,
   createSession,
@@ -8,7 +8,7 @@ import {
   sessionCookie,
   sessionExpiry,
   type AlbumEnvironment,
-} from "./session";
+} from "./session.js";
 
 type ApiRequest = IncomingMessage & { body?: unknown };
 

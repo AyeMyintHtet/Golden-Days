@@ -1,5 +1,5 @@
 import type { IncomingMessage } from "node:http";
-import type { AlbumEnvironment } from "./session";
+import type { AlbumEnvironment } from "./session.js";
 
 const WINDOW_MS = 15 * 60_000;
 const MAX_ATTEMPTS = 5;

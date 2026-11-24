@@ -90,6 +90,10 @@ Create a Vercel project with this directory as its root and the Vite framework p
 
 Vercel deploys `api/album.ts` as a Node function and the Vite output as static files. `vercel.json` adds content security, no-referrer, framing, and MIME-sniffing protections and keeps the service worker and manifest updateable. The theme initializer is a local script so the policy does not need inline JavaScript.
 
+The API uses native Node ES modules: relative server imports include their emitted `.js` extension, and the media-index JSON import declares `with { type: "json" }`. Keep these when editing the backend; development loaders can otherwise hide a production-only import failure. See [Node's ES module loading requirements](https://nodejs.org/api/esm.html#mandatory-file-extensions).
+
+After deploying a backend fix, check `/api/album?action=session` on the new deployment. A configured, signed-out app returns `200` with `authenticated: false`. A `503` setup response means production environment values need attention; local `.env.local` values are not uploaded. A `500` with `FUNCTION_INVOCATION_FAILED` means the function failed to start or run: inspect the failed request in Vercel's Runtime Logs for its exact error. This is different from being offline.
+
 No deployment has been performed automatically. Verify the deployed HTTPS app on your family's actual Myanmar networks before relying on it.
 
 ## Media delivery and downloads
@@ -152,9 +156,12 @@ Small completed videos may receive a bounded background cache fill. Data Saver, 
 ```sh
 npm run typecheck
 npm run test:security
+npm run test:api-runtime
 ```
 
 The security tests use fake credentials and in-memory requests. They open no server port, contact no media provider, and cover unauthorized access, configuration failures, CSRF, session cookies/tampering, secret rotation, signed variants, React SDK URL preservation, download signing, and cache policy limits.
+
+The API runtime check emits only backend modules into a temporary directory and loads them with native Node, without `tsx` resolution. It checks startup, missing configuration, sessions, sign-in, and signed album creation with fake credentials. It starts no server, runs no frontend build, reads no `.env` file, and removes the temporary files afterward.
 
 Project workflow: do not run `npm run build` as a test, and do not start localhost automatically. Ask the owner to check UI changes. Actual iPhone/Android playback, the 3D fallback, installation, offline re-entry, multi-tab sign-out, and downloads still require the owner's browser checks.
 
