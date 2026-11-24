@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { Heart, Images, Sparkles, Sun } from "lucide-react";
 import type { Memory } from "../data/memories";
-import { resolveMediaUrl } from "../lib/media";
+import MediaImage from "./MediaImage";
 
 interface AlbumIntroProps {
   photos: Memory[];
@@ -57,30 +57,22 @@ export default function AlbumIntro({
           aria-label="Open the Bangkok photo album"
         >
           <span className="postcard postcard-back">
-            <img
+            <MediaImage
               src={
-                resolveMediaUrl(
-                  (photos[1] ?? photos[0]).thumbnailLarge ??
-                    (photos[1] ?? photos[0]).thumbnail,
-                ) ?? undefined
+                (photos[1] ?? photos[0]).thumbnailLarge ??
+                (photos[1] ?? photos[0]).thumbnail
               }
               alt=""
               loading="lazy"
-              decoding="async"
               fetchPriority="low"
             />
             <span>little adventures</span>
           </span>
           <span className="postcard postcard-front">
-            <img
-              src={
-                resolveMediaUrl(
-                  photos[0].thumbnailLarge ?? photos[0].thumbnail,
-                ) ?? undefined
-              }
+            <MediaImage
+              src={photos[0].thumbnailLarge ?? photos[0].thumbnail}
               alt=""
               loading="lazy"
-              decoding="async"
               fetchPriority="low"
             />
             <span>Bangkok, with love ♡</span>

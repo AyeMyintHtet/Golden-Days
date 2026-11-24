@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { memories as sampleMemories, type Memory } from "../data/memories";
 import { parseMemories, resolveMediaUrl } from "../lib/media";
 import {
@@ -17,6 +17,7 @@ export function useMemories() {
     status: endpoint ? "loading" : "ready",
   }));
   const [attempt, setAttempt] = useState(0);
+  const refreshAt = useRef(0);
 
   useEffect(() => {
     if (!endpoint) return;
@@ -24,6 +25,7 @@ export function useMemories() {
     let active = true;
     let timeout: number | undefined;
     let cacheTimeout: number | undefined;
+    let refreshTimeout: number | undefined;
     setAlbum((current) =>
       current.items.length ? current : { ...current, status: "loading" },
     );
@@ -62,6 +64,11 @@ export function useMemories() {
           if ([401, 403, 404, 410].includes(response.status)) {
             saved = null;
             void forgetSavedAlbum(url);
+            if (
+              [401, 403].includes(response.status) &&
+              import.meta.env.VITE_AUTH_REQUIRED === "true"
+            )
+              window.dispatchEvent(new Event("golden-days:unauthorized"));
           }
           throw new Error("Album request failed");
         }
@@ -69,6 +76,14 @@ export function useMemories() {
         if (!active || controller.signal.aborted) return;
         setAlbum({ items, status: "ready" });
         void saveAlbum(url, items, response.headers.get("Cache-Control"));
+        const expiry = Number(response.headers.get("X-Media-Expires-At"));
+        if (Number.isFinite(expiry) && expiry > Date.now()) {
+          refreshAt.current = expiry - 120_000;
+          refreshTimeout = window.setTimeout(
+            () => setAttempt((current) => current + 1),
+            Math.max(30_000, refreshAt.current - Date.now()),
+          );
+        }
       } catch {
         if (active)
           setAlbum(
@@ -86,6 +101,7 @@ export function useMemories() {
       active = false;
       window.clearTimeout(cacheTimeout);
       window.clearTimeout(timeout);
+      window.clearTimeout(refreshTimeout);
       controller.abort();
     };
   }, [endpoint, attempt]);
@@ -95,8 +111,21 @@ export function useMemories() {
     function reconnect() {
       setAttempt((current) => current + 1);
     }
+    function resume() {
+      if (
+        !document.hidden &&
+        navigator.onLine &&
+        refreshAt.current &&
+        Date.now() >= refreshAt.current
+      )
+        reconnect();
+    }
     window.addEventListener("online", reconnect);
-    return () => window.removeEventListener("online", reconnect);
+    document.addEventListener("visibilitychange", resume);
+    return () => {
+      window.removeEventListener("online", reconnect);
+      document.removeEventListener("visibilitychange", resume);
+    };
   }, [endpoint]);
 
   return {

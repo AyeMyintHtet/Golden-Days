@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import { Video as ImageKitVideo } from "@imagekit/react";
+import { imageKitSource } from "../lib/imagekit";
+import MemoryLoader from "./MemoryLoader";
 import {
   CACHE_VIDEO,
   canWarmVideo,
@@ -17,6 +19,8 @@ export default function VideoPlayer({ src, poster, label }: VideoPlayerProps) {
   const [buffering, setBuffering] = useState(false);
   const [failed, setFailed] = useState(false);
   const [cors, setCors] = useState(true);
+  const imagekit = imageKitSource(src);
+  const Video = imagekit ? ImageKitVideo : "video";
 
   useEffect(() => {
     const video = videoRef.current;
@@ -37,11 +41,11 @@ export default function VideoPlayer({ src, poster, label }: VideoPlayerProps) {
 
   return (
     <div className="video-player">
-      <video
+      <Video
         key={cors ? "cors" : "direct"}
         ref={videoRef}
         crossOrigin={cors ? "anonymous" : undefined}
-        src={src}
+        {...(imagekit ?? { src })}
         poster={poster}
         controls
         playsInline
@@ -74,9 +78,8 @@ export default function VideoPlayer({ src, poster, label }: VideoPlayerProps) {
         }}
       />
       {buffering && !failed && (
-        <span className="video-buffering" role="status">
-          <LoaderCircle size={24} className="spin" />
-          <span className="sr-only">Loading video</span>
+        <span className="video-buffering">
+          <MemoryLoader label="Loading video…" compact />
         </span>
       )}
       {failed && (

@@ -14,6 +14,8 @@ export const mediaCacheLimits = {
 };
 
 export const CACHE_VIDEO = "CACHE_VIDEO";
+export const CLEAR_PRIVATE_MEDIA = "CLEAR_PRIVATE_MEDIA";
+export const ENABLE_PRIVATE_MEDIA = "ENABLE_PRIVATE_MEDIA";
 
 interface DeviceHints {
   onLine?: boolean;
@@ -40,7 +42,11 @@ export async function forgetCachedMedia(url: string, kind: "image" | "video") {
   }
 }
 
-export function canCacheMedia(response: Response, kind: "image" | "video") {
+export function canCacheMedia(
+  response: Response,
+  kind: "image" | "video",
+  privateOfflineCopy = false,
+) {
   const size = Number(response.headers.get("content-length"));
   const policy = response.headers.get("cache-control") ?? "";
   const type = response.headers.get("content-type") ?? "";
@@ -48,9 +54,9 @@ export function canCacheMedia(response: Response, kind: "image" | "video") {
     response.status === 200 &&
     !response.headers.has("content-range") &&
     type.toLowerCase().startsWith(`${kind}/`) &&
-    !/(?:^|,)\s*(?:no-store|no-cache|must-revalidate)(?:\s*=|\s*(?:,|$))/i.test(
-      policy,
-    ) &&
+    !/(?:^|,)\s*(?:no-store|no-cache)(?:\s*=|\s*(?:,|$))/i.test(policy) &&
+    (privateOfflineCopy ||
+      !/(?:^|,)\s*must-revalidate(?:\s*(?:,|$))/i.test(policy)) &&
     !/(?:^|,)\s*max-age\s*=\s*"?0+"?(?:\s|,|$)/i.test(policy) &&
     Number.isSafeInteger(size) &&
     size > 0 &&

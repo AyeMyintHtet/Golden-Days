@@ -11,10 +11,13 @@ import { ExpirationPlugin } from "workbox-expiration";
 import { RangeRequestsPlugin } from "workbox-range-requests";
 import {
   CACHE_VIDEO,
+  CLEAR_PRIVATE_MEDIA,
+  ENABLE_PRIVATE_MEDIA,
   canCacheMedia,
   canWarmVideo,
   mediaCacheLimits,
 } from "./lib/media-cache";
+import { imageKitSource } from "./lib/imagekit";
 
 declare const self: ServiceWorkerGlobalScope & {
   __WB_MANIFEST: (PrecacheEntry | string)[];
@@ -39,6 +42,28 @@ registerRoute(
   }),
 );
 
+let privateCachingAllowed = true;
+
+function isPrivateImageKitCopy(url: string) {
+  const source = imageKitSource(url);
+  return Boolean(
+    source &&
+    /^[a-f0-9]{40}$/.test(source.queryParameters["ik-s"] ?? "") &&
+    Number(source.queryParameters["ik-t"]) > 0,
+  );
+}
+
+function cachedMedia(request: Request, response?: Response) {
+  if (!privateCachingAllowed) return null;
+  if (isPrivateImageKitCopy(request.url)) {
+    const expiry = Number(new URL(request.url).searchParams.get("ik-t")) * 1000;
+    // Online requests must have unexpired authorization. Offline saved copies
+    // deliberately remain on this signed-in device until sign-out or eviction.
+    if (self.navigator.onLine && expiry <= Date.now()) return null;
+  }
+  return response;
+}
+
 const imageCache = new CacheFirst({
   cacheName: mediaCacheLimits.image.cacheName,
   plugins: [
@@ -49,8 +74,17 @@ const imageCache = new CacheFirst({
         new URL(request.url).origin !== self.location.origin
           ? new Request(request, { mode: "cors", credentials: "omit" })
           : request,
-      cacheWillUpdate: async ({ response }) =>
-        canCacheMedia(response, "image") ? response : null,
+      cachedResponseWillBeUsed: async ({ request, cachedResponse }) =>
+        cachedMedia(request, cachedResponse),
+      cacheWillUpdate: async ({ request, response }) =>
+        privateCachingAllowed &&
+        canCacheMedia(response, "image", isPrivateImageKitCopy(request.url))
+          ? response
+          : null,
+      cacheDidUpdate: async ({ cacheName, request }) => {
+        if (!privateCachingAllowed)
+          await (await caches.open(cacheName)).delete(request);
+      },
       // Providers without CORS still display normally, without app caching.
       handlerDidError: async ({ request }) => fetch(request),
     },
@@ -68,14 +102,26 @@ const videoCache = new CacheFirst({
       fetchDidSucceed: async ({ request, response }) => {
         // A background fill has no destination. Cancel it at the headers if
         // the file is too large or disallows storage; streamed playback continues.
-        if (request.destination === "" && !canCacheMedia(response, "video")) {
+        if (
+          request.destination === "" &&
+          !canCacheMedia(response, "video", isPrivateImageKitCopy(request.url))
+        ) {
           await response.body?.cancel();
           throw new Error("Video is not eligible for local caching");
         }
         return response;
       },
-      cacheWillUpdate: async ({ response }) =>
-        canCacheMedia(response, "video") ? response : null,
+      cachedResponseWillBeUsed: async ({ request, cachedResponse }) =>
+        cachedMedia(request, cachedResponse),
+      cacheWillUpdate: async ({ request, response }) =>
+        privateCachingAllowed &&
+        canCacheMedia(response, "video", isPrivateImageKitCopy(request.url))
+          ? response
+          : null,
+      cacheDidUpdate: async ({ cacheName, request }) => {
+        if (!privateCachingAllowed)
+          await (await caches.open(cacheName)).delete(request);
+      },
       handlerDidError: async ({ request, error }) => {
         if (request.destination === "video") return fetch(request);
         throw error;
@@ -93,11 +139,14 @@ registerRoute(({ request }) => request.destination === "image", imageCache);
 registerRoute(({ request }) => request.destination === "video", videoCache);
 
 let warmingVideo = false;
+let videoWarmController: AbortController | null = null;
 
 async function cacheVideo(url: string, event: ExtendableMessageEvent) {
-  if (warmingVideo || !canWarmVideo(self.navigator)) return;
+  if (warmingVideo || !privateCachingAllowed || !canWarmVideo(self.navigator))
+    return;
   warmingVideo = true;
   const controller = new AbortController();
+  videoWarmController = controller;
   const timeout = setTimeout(() => controller.abort(), 20_000);
   try {
     const request = new Request(url, {
@@ -116,10 +165,37 @@ async function cacheVideo(url: string, event: ExtendableMessageEvent) {
   } finally {
     clearTimeout(timeout);
     warmingVideo = false;
+    videoWarmController = null;
   }
 }
 
 self.addEventListener("message", (event) => {
+  if (
+    event.origin === self.location.origin &&
+    event.data?.type === CLEAR_PRIVATE_MEDIA
+  ) {
+    privateCachingAllowed = false;
+    videoWarmController?.abort();
+    event.waitUntil(
+      (async () => {
+        const names = await caches.keys();
+        await Promise.all(
+          names
+            .filter((name) => /^golden-days-(images|videos|album)-/.test(name))
+            .map((name) => caches.delete(name)),
+        );
+        event.ports[0]?.postMessage({ ok: true });
+      })(),
+    );
+    return;
+  }
+  if (
+    event.origin === self.location.origin &&
+    event.data?.type === ENABLE_PRIVATE_MEDIA
+  ) {
+    privateCachingAllowed = true;
+    return;
+  }
   if (event.data?.type === "SKIP_WAITING") {
     void self.skipWaiting();
     return;

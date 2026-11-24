@@ -1,5 +1,6 @@
 import type { Memory } from "../data/memories";
 import { getDownloadUrl } from "./media";
+import { imageKitSource } from "./imagekit";
 
 function saveBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -46,6 +47,25 @@ export async function downloadMemories(
   onProgress?: (completed: number, total: number) => void,
 ) {
   if (!items.length) return;
+  if (items.length === 1) {
+    const url = getDownloadUrl(items[0]);
+    // ImageKit's signed attachment response lets the browser stream large
+    // originals straight to disk, without buffering a video in phone memory.
+    if (
+      url &&
+      imageKitSource(url) &&
+      new URL(url).searchParams.get("ik-attachment") === "true"
+    ) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.rel = "noopener noreferrer";
+      link.target = "_blank";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      return;
+    }
+  }
   const maxBytes = 32 * 1024 * 1024;
   const limitMessage =
     "Choose fewer or smaller files: up to 20 files and 32 MB per download.";

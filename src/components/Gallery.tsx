@@ -23,9 +23,15 @@ interface GalleryProps {
 interface MemoryCardProps extends Omit<GalleryProps, "items" | "onReset"> {
   memory: Memory;
   index: number;
+  featuredLoading: boolean;
 }
 
-function MemoryCard({ memory, index, ...props }: MemoryCardProps) {
+function MemoryCard({
+  memory,
+  index,
+  featuredLoading,
+  ...props
+}: MemoryCardProps) {
   const favorite = props.favorites.includes(memory.id);
   const selected = props.selected.has(memory.id);
   const label = `${memory.kind === "video" ? "Video" : "Photo"} ${index + 1}`;
@@ -67,6 +73,7 @@ function MemoryCard({ memory, index, ...props }: MemoryCardProps) {
               : "(min-width: 1150px) 23vw, (min-width: 700px) 33vw, 50vw"
           }
           alt={label}
+          loadingEffect={featuredLoading ? "three" : "shimmer"}
           loading={index < 2 ? "eager" : "lazy"}
           fetchPriority={index === 0 ? "high" : "auto"}
         />
@@ -117,6 +124,9 @@ export default function Gallery(props: GalleryProps) {
   const [autoLoad, setAutoLoad] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const visibleItems = props.items.slice(0, visibleCount);
+  const firstPhotoIndex = visibleItems.findIndex(
+    (memory) => memory.kind === "photo",
+  );
   const hasMore = visibleItems.length < props.items.length;
 
   useEffect(() => {
@@ -175,6 +185,7 @@ export default function Gallery(props: GalleryProps) {
               key={memory.id}
               memory={memory}
               index={index}
+              featuredLoading={index === firstPhotoIndex}
               favorites={props.favorites}
               selected={props.selected}
               selecting={props.selecting}

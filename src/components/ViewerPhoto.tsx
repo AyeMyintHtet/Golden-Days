@@ -24,6 +24,7 @@ export default function ViewerPhoto({
       loading="eager"
       fetchPriority="high"
       retryable
+      loadingEffect="three"
       onDoubleClick={() => setZoomed((current) => !current)}
       onTouchStart={(event) => {
         touchStart.current =

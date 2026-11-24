@@ -1,5 +1,6 @@
 import type { Memory } from "../data/memories";
 import { parseMemories } from "./media";
+import { explicitlySignedOut } from "./album-session";
 
 const ALBUM_CACHE = "golden-days-album-v1";
 
@@ -21,6 +22,8 @@ export async function saveAlbum(
 ) {
   try {
     if (!("caches" in globalThis)) return;
+    if (import.meta.env.VITE_AUTH_REQUIRED === "true" && explicitlySignedOut())
+      return;
     const cache = await caches.open(ALBUM_CACHE);
     if (/(?:^|,)\s*no-store(?:\s|,|$)/i.test(cacheControl ?? "")) {
       await cache.delete(url);
@@ -32,6 +35,13 @@ export async function saveAlbum(
         headers: { "Content-Type": "application/json" },
       }),
     );
+    if (
+      import.meta.env.VITE_AUTH_REQUIRED === "true" &&
+      explicitlySignedOut()
+    ) {
+      await cache.delete(url);
+      return;
+    }
     // This app has one album; do not accumulate old endpoint snapshots.
     for (const request of await cache.keys())
       if (request.url !== url) await cache.delete(request);

@@ -1,8 +1,10 @@
-import { ChevronDown, Sun } from "lucide-react";
+import { ChevronDown, LogOut, Sun } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import InstallAppButton from "./InstallAppButton";
+import { useAlbumSession } from "./AlbumAccess";
 
 export default function AppHeader({ onAbout }: { onAbout: () => void }) {
+  const { signOut } = useAlbumSession();
   return (
     <header className="topbar">
       <div className="topbar-location">
@@ -16,6 +18,15 @@ export default function AppHeader({ onAbout }: { onAbout: () => void }) {
       <div className="topbar-right">
         <InstallAppButton />
         <ThemeToggle />
+        {signOut && (
+          <button
+            className="icon-button"
+            onClick={signOut}
+            aria-label="Sign out of family album"
+          >
+            <LogOut size={19} />
+          </button>
+        )}
         <button
           className="family-button"
           onClick={onAbout}

@@ -11,7 +11,6 @@ import {
   Heart,
   Images,
   LoaderCircle,
-  Play,
   Sun,
   X,
 } from "lucide-react";
@@ -22,6 +21,7 @@ import Gallery from "./components/Gallery";
 import Viewer from "./components/Viewer";
 import AboutAlbum from "./components/AboutAlbum";
 import PwaStatus from "./components/PwaStatus";
+import MemoryLoader from "./components/MemoryLoader";
 import {
   filterMemories,
   type Collection,
@@ -160,7 +160,7 @@ export default function App() {
       });
       setToast(
         requested.length === 1
-          ? "Your download is ready."
+          ? "Your download has started."
           : `${requested.length} memories packed into one download.`,
       );
     } catch (error) {
@@ -282,19 +282,6 @@ export default function App() {
                     <span className="title-dot">.</span>
                   </h2>
                 </div>
-                <button
-                  className="button button-outline slideshow-button"
-                  aria-label="Relive the moments"
-                  disabled={!items.length}
-                  onClick={() =>
-                    setViewer({ id: items[0].id, scope: "visible" })
-                  }
-                >
-                  <Play size={18} aria-hidden="true" />
-                  <span className="slideshow-button-label">
-                    Relive the moments
-                  </span>
-                </button>
               </div>
 
               <div className="library-toolbar">
@@ -394,8 +381,7 @@ export default function App() {
               </div>
               {loading ? (
                 <div className="catalog-status" role="status">
-                  <LoaderCircle className="spin" size={24} />
-                  <span>Loading your memories…</span>
+                  <MemoryLoader label="Loading your memories…" />
                 </div>
               ) : error ? (
                 <div className="catalog-status" role="alert">
