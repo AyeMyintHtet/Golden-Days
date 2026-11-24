@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import i18n from "../i18n";
 
 export default class AppErrorBoundary extends Component<
   { children: ReactNode },
@@ -14,13 +15,13 @@ export default class AppErrorBoundary extends Component<
     if (this.state.failed)
       return (
         <main className="app-error" role="alert">
-          <h1>Let’s open your memories again.</h1>
-          <p>The album couldn’t open properly. Please try reloading it.</p>
+          <h1>{i18n.t("error.title")}</h1>
+          <p>{i18n.t("error.description")}</p>
           <button
             className="button button-gold"
             onClick={() => window.location.reload()}
           >
-            Reload album
+            {i18n.t("error.reload")}
           </button>
         </main>
       );

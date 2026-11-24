@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { ArrowRight, LockKeyhole, Sun } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 import {
   explicitlySignedOut,
   forgetAccess,
@@ -21,6 +22,7 @@ import {
 } from "../lib/album-session";
 import ThemeToggle from "./ThemeToggle";
 import MemoryLoader from "./MemoryLoader";
+import useKeyboardScroll from "../hooks/useKeyboardScroll";
 
 const SessionContext = createContext<{ signOut?: () => void }>({});
 export const useAlbumSession = () => useContext(SessionContext);
@@ -34,6 +36,7 @@ export default function AlbumAccess({ children }: { children: ReactNode }) {
 }
 
 function PrivateAlbumAccess({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<
     "checking" | "ready" | "locked" | "unavailable" | "setup"
   >("checking");
@@ -43,6 +46,7 @@ function PrivateAlbumAccess({ children }: { children: ReactNode }) {
   const [submitting, setSubmitting] = useState(false);
   const requestRef = useRef<AbortController | null>(null);
   const signingIn = useRef(false);
+  const { containerRef, inputRef } = useKeyboardScroll(status === "locked");
 
   const acceptSession = useCallback((expiry: number) => {
     rememberAccess(expiry);
@@ -172,7 +176,13 @@ function PrivateAlbumAccess({ children }: { children: ReactNode }) {
         return;
       }
       if (response.status === 401) {
-        setMessage("That password didn’t match. Please try again.");
+        setMessage(t("access.wrongPassword"));
+        return;
+      }
+      if (response.status === 429) {
+        const seconds = Number(response.headers.get("Retry-After"));
+        const minutes = Math.max(1, Math.ceil((seconds || 60) / 60));
+        setMessage(t("access.tooManyAttempts", { count: minutes }));
         return;
       }
       if (!response.ok) throw new Error("Sign-in unavailable");
@@ -187,9 +197,7 @@ function PrivateAlbumAccess({ children }: { children: ReactNode }) {
       setPassword("");
       acceptSession(Number(session.expiresAt));
     } catch {
-      setMessage(
-        "We couldn’t sign you in. Check your connection and try again.",
-      );
+      setMessage(t("access.connectionError"));
     } finally {
       window.clearTimeout(timeout);
       setSubmitting(false);
@@ -215,7 +223,7 @@ function PrivateAlbumAccess({ children }: { children: ReactNode }) {
     );
 
   return (
-    <main className="album-access">
+    <main className="album-access" ref={containerRef}>
       <div className="access-theme">
         <ThemeToggle />
       </div>
@@ -223,25 +231,17 @@ function PrivateAlbumAccess({ children }: { children: ReactNode }) {
         <span className="access-sun">
           <Sun size={30} strokeWidth={1.3} />
         </span>
-        <span className="eyebrow">OUR LITTLE MEMORY BOX</span>
+        <span className="eyebrow">{t("access.eyebrow")}</span>
         <h1 id="access-title">
-          Some days
-          <br />
-          stay <em>golden.</em>
+          <Trans i18nKey="access.title" />
         </h1>
         {status === "checking" ? (
-          <MemoryLoader label="Opening your album…" />
+          <MemoryLoader label={t("access.openingAlbum")} />
         ) : status === "setup" ? (
-          <p role="status">
-            Your album is nearly ready. Please ask the album owner to finish
-            connecting it.
-          </p>
+          <p role="status">{t("access.setup")}</p>
         ) : status === "unavailable" ? (
           <>
-            <p>
-              Connect to the internet to sign in. Previously opened memories
-              remain available on a signed-in device.
-            </p>
+            <p>{t("access.offline")}</p>
             <button
               className="button button-gold"
               onClick={() => {
@@ -249,21 +249,20 @@ function PrivateAlbumAccess({ children }: { children: ReactNode }) {
                 void checkSession();
               }}
             >
-              Try again
+              {t("common.tryAgain")}
             </button>
           </>
         ) : (
           <>
             <p>
-              A little place for our family.
-              <br />
-              Enter our password to come inside.
+              <Trans i18nKey="access.welcome" />
             </p>
             <form onSubmit={signIn} className="access-form">
-              <label htmlFor="family-password">Family password</label>
+              <label htmlFor="family-password">{t("access.password")}</label>
               <div className="access-input">
                 <LockKeyhole size={18} aria-hidden="true" />
                 <input
+                  ref={inputRef}
                   id="family-password"
                   type="password"
                   inputMode="numeric"
@@ -286,12 +285,12 @@ function PrivateAlbumAccess({ children }: { children: ReactNode }) {
                 type="submit"
                 disabled={submitting}
               >
-                {submitting ? "Opening the album…" : "Come on in"}
+                {t(submitting ? "access.opening" : "access.enter")}
                 <ArrowRight size={17} />
               </button>
             </form>
             <span className="access-note">
-              <LockKeyhole size={12} /> Just for our family
+              <LockKeyhole size={12} /> {t("access.familyOnly")}
             </span>
           </>
         )}

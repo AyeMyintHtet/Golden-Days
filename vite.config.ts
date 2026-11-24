@@ -2,8 +2,16 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import { handleAlbumApi } from "./server/album-api";
+import { APP_LANGUAGE, resources } from "./src/i18n/config";
 
 const browserTargets = ["chrome87", "edge88", "firefox78", "safari14"];
+const appText = resources[APP_LANGUAGE].translation.app;
+const htmlText: Record<string, string> = {
+  __APP_LANGUAGE__: APP_LANGUAGE,
+  __APP_NAME__: appText.name,
+  __APP_TITLE__: appText.title,
+  __APP_DESCRIPTION__: appText.description,
+};
 
 export default defineConfig(({ mode }) => {
   // These values stay in the Node development middleware. They are never
@@ -26,6 +34,21 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       {
+        name: "app-language",
+        transformIndexHtml: {
+          order: "pre",
+          handler(html) {
+            return html.replace(/__APP_[A-Z_]+__/g, (key) =>
+              htmlText[key]
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;"),
+            );
+          },
+        },
+      },
+      {
         name: "private-album-api",
         configureServer(server) {
           server.middlewares.use("/api/album", (request, response, next) => {
@@ -42,10 +65,10 @@ export default defineConfig(({ mode }) => {
         includeAssets: ["favicon.svg", "icons/apple-touch-icon.png"],
         manifest: {
           id: "/",
-          name: "Golden Days",
-          short_name: "Golden Days",
-          description: "A little home for our family memories.",
-          lang: "en",
+          name: appText.name,
+          short_name: appText.shortName,
+          description: appText.description,
+          lang: APP_LANGUAGE,
           start_url: "/",
           scope: "/",
           display: "standalone",

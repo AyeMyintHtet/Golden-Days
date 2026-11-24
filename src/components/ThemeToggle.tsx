@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Moon, Sun } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type Theme = "light" | "dark";
 type CurtainTransition = { phase: "closing" | "opening"; theme: Theme };
@@ -18,6 +19,7 @@ function applyTheme(theme: Theme) {
 }
 
 export default function ThemeToggle() {
+  const { t } = useTranslation();
   const [theme, setTheme] = useState<Theme>(() =>
     document.documentElement.dataset.theme === "dark" ? "dark" : "light",
   );
@@ -81,19 +83,21 @@ export default function ThemeToggle() {
         className="theme-toggle"
         onClick={switchTheme}
         disabled={transitioning}
-        aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
+        aria-label={t(
+          theme === "light" ? "theme.switchDark" : "theme.switchLight",
+        )}
         aria-pressed={theme === "dark"}
-        title={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
+        title={t(theme === "light" ? "theme.switchDark" : "theme.switchLight")}
       >
         {theme === "dark" ? (
           <Moon size={17} aria-hidden="true" />
         ) : (
           <Sun size={17} aria-hidden="true" />
         )}
-        <span>{theme === "dark" ? "Dark" : "Light"}</span>
+        <span>{t(theme === "dark" ? "theme.dark" : "theme.light")}</span>
       </button>
       <span className="sr-only" role="status" aria-live="polite">
-        {theme === "dark" ? "Dark" : "Light"} theme
+        {t(theme === "dark" ? "theme.darkStatus" : "theme.lightStatus")}
       </span>
       {transition &&
         createPortal(

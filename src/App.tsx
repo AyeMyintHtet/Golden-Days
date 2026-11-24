@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "motion/react";
 import {
   Camera,
@@ -40,6 +41,7 @@ function initialViewer() {
 }
 
 export default function App() {
+  const { t } = useTranslation();
   const [collection, setCollection] = useState<Collection>("all");
   const [kind, setKind] = useState<MediaFilter>("all");
   const [compact, setCompact] = useState(false);
@@ -147,28 +149,24 @@ export default function App() {
     if (downloadInProgress.current || !requested.length) return;
     downloadInProgress.current = true;
     setDownloading(true);
-    setDownloadProgress("Preparing your memories…");
+    setDownloadProgress(t("download.preparing"));
     try {
       await downloadMemories(requested, (completed, total) => {
         setDownloadProgress(
           completed < total
-            ? `Preparing ${completed} of ${total} memories…`
+            ? t("download.progress", { completed, total })
             : total > 1
-              ? "Packing your download…"
-              : "Finishing your download…",
+              ? t("download.packing")
+              : t("download.finishing"),
         );
       });
       setToast(
         requested.length === 1
-          ? "Your download has started."
-          : `${requested.length} memories packed into one download.`,
+          ? t("download.started")
+          : t("download.packed", { count: requested.length }),
       );
     } catch (error) {
-      setToast(
-        error instanceof Error
-          ? error.message
-          : "The download couldn’t finish. Please try again.",
-      );
+      setToast(error instanceof Error ? error.message : t("download.error"));
     } finally {
       downloadInProgress.current = false;
       setDownloading(false);
@@ -181,27 +179,27 @@ export default function App() {
     try {
       if (navigator.share)
         await navigator.share({
-          title: "Golden Days · A family memory",
+          title: t("share.title"),
           url: url.href,
         });
       else {
         await navigator.clipboard.writeText(url.href);
-        setToast("Memory link copied. Share a little sunshine.");
+        setToast(t("share.copied"));
       }
     } catch (error) {
       if (!(error instanceof DOMException && error.name === "AbortError"))
-        setToast("Sharing is unavailable in this browser.");
+        setToast(t("share.unavailable"));
     }
   }
 
   const currentTitle =
     collection === "favorites"
-      ? "Your favorites"
+      ? t("library.favorites")
       : kind === "video"
-        ? "Little moments in motion"
+        ? t("library.videos")
         : kind === "photo"
-          ? "Our photographs"
-          : "All the good moments";
+          ? t("library.photos")
+          : t("library.all");
   const downloadableItems = items.filter((memory) =>
     Boolean(getDownloadUrl(memory)),
   );
@@ -231,7 +229,7 @@ export default function App() {
           {!downloading && (
             <button
               onClick={() => setToast("")}
-              aria-label="Dismiss notification"
+              aria-label={t("common.dismissNotification")}
             >
               <X size={15} />
             </button>
@@ -244,7 +242,7 @@ export default function App() {
   return (
     <>
       <a className="skip-link" href="#main">
-        Skip to memories
+        {t("common.skipToMemories")}
       </a>
       <div className="app-shell">
         <Sidebar
@@ -275,11 +273,11 @@ export default function App() {
               <div className="library-heading">
                 <div>
                   <span className="eyebrow section-eyebrow">
-                    THE MEMORY BOX
+                    {t("library.eyebrow")}
                   </span>
                   <h2 id="library-title">
                     {currentTitle}
-                    <span className="title-dot">.</span>
+                    <span className="title-dot">{t("common.fullStop")}</span>
                   </h2>
                 </div>
               </div>
@@ -288,13 +286,13 @@ export default function App() {
                 <div
                   className="media-tabs"
                   role="group"
-                  aria-label="Filter by media type"
+                  aria-label={t("library.filter")}
                 >
                   {(
                     [
-                      { value: "all", label: "All memories", icon: Images },
-                      { value: "photo", label: "Photos", icon: Camera },
-                      { value: "video", label: "Videos", icon: Film },
+                      { value: "all", label: t("nav.all"), icon: Images },
+                      { value: "photo", label: t("nav.photos"), icon: Camera },
+                      { value: "video", label: t("nav.videos"), icon: Film },
                     ] as const
                   ).map(({ value, label, icon: Icon }) => (
                     <button
@@ -311,9 +309,11 @@ export default function App() {
                 <div className="toolbar-actions">
                   <button
                     className={`icon-button select-toggle ${selecting ? "is-active" : ""}`}
-                    aria-label={
-                      selecting ? "Cancel selection" : "Select memories"
-                    }
+                    aria-label={t(
+                      selecting
+                        ? "library.cancelSelection"
+                        : "library.selectMemories",
+                    )}
                     aria-pressed={selecting}
                     onClick={() => {
                       setSelecting(!selecting);
@@ -325,9 +325,11 @@ export default function App() {
                   <span className="toolbar-separator" />
                   <button
                     className="icon-button grid-toggle"
-                    aria-label={
-                      compact ? "Use comfortable grid" : "Use compact grid"
-                    }
+                    aria-label={t(
+                      compact
+                        ? "library.comfortableGrid"
+                        : "library.compactGrid",
+                    )}
                     aria-pressed={compact}
                     onClick={() => setCompact(!compact)}
                   >
@@ -340,7 +342,7 @@ export default function App() {
                 <div className="selection-toolbar">
                   <span>
                     <Check size={16} />
-                    {selectedItems.length} selected
+                    {t("library.selected", { count: selectedItems.length })}
                   </span>
                   <button
                     disabled={!downloadableItems.length}
@@ -356,8 +358,8 @@ export default function App() {
                   >
                     {selectedItems.length === downloadableItems.length &&
                     downloadableItems.length
-                      ? "Deselect all"
-                      : "Select all"}
+                      ? t("library.deselectAll")
+                      : t("library.selectAll")}
                   </button>
                   <button
                     className="button button-gold"
@@ -369,29 +371,29 @@ export default function App() {
                     ) : (
                       <Download size={16} />
                     )}
-                    Download
-                    {selectedItems.length > 0 && ` (${selectedItems.length})`}
+                    {t("common.download")}
+                    {selectedItems.length > 0 &&
+                      ` (${t("common.number", { value: selectedItems.length })})`}
                   </button>
                 </div>
               )}
 
               <div className="sr-only" role="status" aria-live="polite">
-                {items.length} {items.length === 1 ? "memory" : "memories"}{" "}
-                shown
+                {t("library.shown", { count: items.length })}
               </div>
               {loading ? (
                 <div className="catalog-status" role="status">
-                  <MemoryLoader label="Loading your memories…" />
+                  <MemoryLoader label={t("library.loading")} />
                 </div>
               ) : error ? (
                 <div className="catalog-status" role="alert">
                   <p>
                     {pwa.online
-                      ? "Your album couldn’t load."
-                      : "No saved album yet. Connect to load your memories."}
+                      ? t("library.loadError")
+                      : t("library.noSavedAlbum")}
                   </p>
                   <button className="button button-gold" onClick={retry}>
-                    Try again
+                    {t("common.tryAgain")}
                   </button>
                 </div>
               ) : (
@@ -414,32 +416,37 @@ export default function App() {
             <footer className="album-footer">
               <Sun size={19} strokeWidth={1.2} />
               <span>
-                A little collection of our favorite <em>remember whens.</em>
+                <Trans i18nKey="library.footer" />
               </span>
               <Heart size={14} />
-              <small>Made for the memories</small>
+              <small>{t("library.footerNote")}</small>
             </footer>
           </main>
         </div>
 
-        <nav className="mobile-nav" aria-label="Quick navigation">
+        <nav className="mobile-nav" aria-label={t("nav.quick")}>
           {(
             [
               {
-                label: "Memories",
+                label: t("nav.memories"),
                 icon: Images,
                 collection: "all",
                 kind: "all",
               },
               {
-                label: "Photos",
+                label: t("nav.photos"),
                 icon: Camera,
                 collection: "all",
                 kind: "photo",
               },
-              { label: "Videos", icon: Film, collection: "all", kind: "video" },
               {
-                label: "Favorites",
+                label: t("nav.videos"),
+                icon: Film,
+                collection: "all",
+                kind: "video",
+              },
+              {
+                label: t("nav.favorites"),
                 icon: Heart,
                 collection: "favorites",
                 kind: "all",

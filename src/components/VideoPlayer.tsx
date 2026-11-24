@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Video as ImageKitVideo } from "@imagekit/react";
 import { imageKitSource } from "../lib/imagekit";
 import MemoryLoader from "./MemoryLoader";
@@ -15,6 +16,7 @@ interface VideoPlayerProps {
 }
 
 export default function VideoPlayer({ src, poster, label }: VideoPlayerProps) {
+  const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [buffering, setBuffering] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -79,12 +81,12 @@ export default function VideoPlayer({ src, poster, label }: VideoPlayerProps) {
       />
       {buffering && !failed && (
         <span className="video-buffering">
-          <MemoryLoader label="Loading video…" compact />
+          <MemoryLoader label={t("media.loadingVideo")} compact />
         </span>
       )}
       {failed && (
         <div className="viewer-error">
-          <p>This video couldn’t load.</p>
+          <p>{t("media.videoError")}</p>
           <button
             className="button button-gold"
             onClick={async () => {
@@ -93,7 +95,7 @@ export default function VideoPlayer({ src, poster, label }: VideoPlayerProps) {
               videoRef.current?.load();
             }}
           >
-            Try again
+            {t("common.tryAgain")}
           </button>
         </div>
       )}

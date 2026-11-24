@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Check, Download, Heart, Images, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Memory } from "../data/memories";
 import MediaImage from "./MediaImage";
 import { getDownloadUrl, resolveMediaUrl } from "../lib/media";
@@ -32,9 +33,13 @@ function MemoryCard({
   featuredLoading,
   ...props
 }: MemoryCardProps) {
+  const { t } = useTranslation();
   const favorite = props.favorites.includes(memory.id);
   const selected = props.selected.has(memory.id);
-  const label = `${memory.kind === "video" ? "Video" : "Photo"} ${index + 1}`;
+  const label = t(
+    memory.kind === "video" ? "media.videoLabel" : "media.photoLabel",
+    { number: index + 1 },
+  );
   const downloadable = Boolean(getDownloadUrl(memory));
   const thumbnail = resolveMediaUrl(memory.thumbnail);
   const thumbnailLarge = resolveMediaUrl(memory.thumbnailLarge);
@@ -55,8 +60,8 @@ function MemoryCard({
         }
         aria-label={
           props.selecting
-            ? `${selected ? "Deselect" : "Select"} ${label}`
-            : `Open ${label}`
+            ? t(selected ? "media.deselect" : "media.select", { label })
+            : t("media.open", { label })
         }
         aria-pressed={props.selecting ? selected : undefined}
       >
@@ -87,7 +92,9 @@ function MemoryCard({
         downloadable && (
           <button
             className={`selection-check ${selected ? "checked" : ""}`}
-            aria-label={`${selected ? "Deselect" : "Select"} ${label}`}
+            aria-label={t(selected ? "media.deselect" : "media.select", {
+              label,
+            })}
             aria-pressed={selected}
             onClick={() => props.onSelect(memory.id)}
           >
@@ -98,7 +105,10 @@ function MemoryCard({
         <div className="card-actions">
           <button
             className={`card-action favorite-action ${favorite ? "is-favorite" : ""}`}
-            aria-label={`${favorite ? "Remove" : "Save"} ${label} ${favorite ? "from" : "to"} favorites`}
+            aria-label={t(
+              favorite ? "media.removeFavorite" : "media.saveFavorite",
+              { label },
+            )}
             aria-pressed={favorite}
             onClick={() => props.onFavorite(memory.id)}
           >
@@ -107,7 +117,7 @@ function MemoryCard({
           {downloadable && (
             <button
               className="card-action download-action"
-              aria-label={`Download ${label}`}
+              aria-label={t("media.download", { label })}
               onClick={() => props.onDownload([memory])}
             >
               <Download size={16} />
@@ -120,6 +130,7 @@ function MemoryCard({
 }
 
 export default function Gallery(props: GalleryProps) {
+  const { t } = useTranslation();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [autoLoad, setAutoLoad] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -168,10 +179,10 @@ export default function Gallery(props: GalleryProps) {
         <span className="empty-icon">
           <Images size={31} strokeWidth={1.3} />
         </span>
-        <h2>No moments here, yet.</h2>
-        <p>Save a favorite or explore the rest of your memories.</p>
+        <h2>{t("library.emptyTitle")}</h2>
+        <p>{t("library.emptyDescription")}</p>
         <button className="button button-gold" onClick={props.onReset}>
-          Show all memories
+          {t("library.showAll")}
         </button>
       </motion.div>
     );
@@ -204,7 +215,7 @@ export default function Gallery(props: GalleryProps) {
             className="button button-outline"
             onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
           >
-            Load more memories
+            {t("library.loadMore")}
           </button>
         </div>
       )}

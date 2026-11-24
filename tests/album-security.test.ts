@@ -29,6 +29,8 @@ async function request(
     method?: string;
     cookie?: string;
     origin?: string;
+    ip?: string;
+    remoteAddress?: string;
     body?: unknown;
     environment?: typeof env;
   } = {},
@@ -40,8 +42,12 @@ async function request(
   ) as IncomingMessage;
   req.method = options.method ?? "GET";
   req.url = url;
+  req.socket = {
+    remoteAddress: options.remoteAddress ?? "203.0.113.1",
+  } as IncomingMessage["socket"];
   req.headers = {
     host: "album.example.com",
+    "x-vercel-forwarded-for": options.ip ?? "203.0.113.1",
     ...(options.origin ? { origin: options.origin } : {}),
     ...(options.cookie ? { cookie: options.cookie } : {}),
     ...(options.body !== undefined
@@ -87,7 +93,9 @@ test("numbered files retain stable IDs and omit video 327 when more files are ad
   assert.equal(new Set(ids).size, ids.length);
   assert.deepEqual(
     ids,
-    Array.from({ length: Math.max(...ids) }, (_, i) => i + 1).filter((id) => id !== 327),
+    Array.from({ length: Math.max(...ids) }, (_, i) => i + 1).filter(
+      (id) => id !== 327,
+    ),
   );
 });
 
@@ -163,6 +171,69 @@ test("successful login issues a secure HttpOnly cookie and never returns its tok
   for (const flag of ["HttpOnly", "SameSite=Strict", "Secure", "Path=/api"])
     assert.ok(cookie.includes(flag));
   assert.ok(!JSON.stringify(result.body).includes("token"));
+});
+
+test("a configured six-digit family code can open the album without weakening session cookies", async () => {
+  const environment = { ...env, ALBUM_PASSWORD: "123456" };
+  const session = await request("/api/album?action=session", { environment });
+  assert.equal(session.status, 200);
+  assert.equal(session.body.authenticated, false);
+  const login = await request("/api/album?action=login", {
+    method: "POST",
+    origin: "https://album.example.com",
+    ip: "203.0.113.20",
+    body: { password: environment.ALBUM_PASSWORD },
+    environment,
+  });
+  assert.equal(login.status, 200);
+  assert.equal(login.body.authenticated, true);
+  assert.match(
+    String(login.headers["set-cookie"]),
+    /HttpOnly; SameSite=Strict/,
+  );
+  for (const password of ["", "12345", "1".repeat(257)]) {
+    const invalid = await request("/api/album?action=session", {
+      environment: { ...env, ALBUM_PASSWORD: password },
+    });
+    assert.equal(invalid.status, 503);
+  }
+});
+
+test("repeated failures are throttled, expire, and reset after a successful sign-in", async (t) => {
+  let now = Date.now();
+  t.mock.method(Date, "now", () => now);
+  const login = (password: string, ip = "203.0.113.30") =>
+    request("/api/album?action=login", {
+      method: "POST",
+      origin: "https://album.example.com",
+      ip,
+      body: { password },
+    });
+  for (let i = 0; i < 5; i++) assert.equal((await login("wrong")).status, 401);
+  const blocked = await login(env.ALBUM_PASSWORD);
+  assert.equal(blocked.status, 429);
+  assert.equal(Number(blocked.headers["retry-after"]), 900);
+  assert.equal(blocked.headers["set-cookie"], undefined);
+  assert.equal((await login(env.ALBUM_PASSWORD, "203.0.113.31")).status, 200);
+  now += 15 * 60_000 + 1;
+  assert.equal((await login(env.ALBUM_PASSWORD)).status, 200);
+  for (let i = 0; i < 4; i++) assert.equal((await login("wrong")).status, 401);
+  assert.equal((await login(env.ALBUM_PASSWORD)).status, 200);
+  assert.equal((await login("wrong")).status, 401);
+});
+
+test("local clients cannot bypass the login limit by spoofing forwarded addresses", async () => {
+  for (let i = 0; i < 6; i++) {
+    const result = await request("/api/album?action=login", {
+      method: "POST",
+      origin: "https://album.example.com",
+      ip: `203.0.113.${50 + i}`,
+      remoteAddress: "203.0.113.40",
+      environment: { ...env, VERCEL: "0" },
+      body: { password: "wrong" },
+    });
+    assert.equal(result.status, i < 5 ? 401 : 429);
+  }
 });
 
 test("tampering with a session or changing the family password revokes access", () => {

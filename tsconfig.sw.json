@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "lib": ["ES2022", "WebWorker"],
-    "types": []
+    "lib": ["ES2022", "WebWorker", "WebWorker.Iterable"],
+    "types": ["vite/client"]
   },
   "include": ["src/sw.ts"],
   "exclude": []

@@ -1,4 +1,5 @@
 import { useCallback, useState, type ImgHTMLAttributes } from "react";
+import { useTranslation } from "react-i18next";
 import { ImageOff } from "lucide-react";
 import { Image as ImageKitImage } from "@imagekit/react";
 import { resolveMediaUrl, type MediaLink } from "../lib/media";
@@ -35,6 +36,7 @@ function ImageContent({
   onError,
   ...imageProps
 }: Omit<MediaImageProps, "src"> & { src: string | null }) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<"loading" | "loaded" | "error">(
     src ? "loading" : "error",
   );
@@ -56,7 +58,7 @@ function ImageContent({
       {status === "error" && (
         <span className="image-fallback">
           <ImageOff size={24} aria-hidden="true" />
-          <span>Image unavailable</span>
+          <span>{t("media.imageUnavailable")}</span>
           {retryable && src && (
             <button
               className="button button-gold"
@@ -66,7 +68,7 @@ function ImageContent({
                 setAttempt((current) => current + 1);
               }}
             >
-              Try again
+              {t("common.tryAgain")}
             </button>
           )}
         </span>

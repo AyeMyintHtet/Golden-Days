@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { LoaderCircle, Play } from "lucide-react";
 import type { MediaLink } from "../lib/media";
 import MediaImage from "./MediaImage";
@@ -10,6 +11,7 @@ interface EmbedVideoProps {
 }
 
 export default function EmbedVideo({ src, poster, label }: EmbedVideoProps) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(
     "idle",
   );
@@ -34,22 +36,22 @@ export default function EmbedVideo({ src, poster, label }: EmbedVideoProps) {
             onClick={() => {
               setStatus("loading");
             }}
-            aria-label={`Open player for ${label}`}
+            aria-label={t("media.openPlayerFor", { label })}
           >
             <MediaImage src={poster} alt="" loading="eager" />
             <span className="embed-play-label">
               <Play size={24} fill="currentColor" aria-hidden="true" />
-              <span>Open video player</span>
+              <span>{t("media.openPlayer")}</span>
             </span>
           </button>
         ) : status === "error" ? (
           <div className="viewer-error">
-            <p>This video couldn’t load.</p>
+            <p>{t("media.videoError")}</p>
             <button
               className="button button-gold"
               onClick={() => setStatus("idle")}
             >
-              Try again
+              {t("common.tryAgain")}
             </button>
           </div>
         ) : (
@@ -70,7 +72,7 @@ export default function EmbedVideo({ src, poster, label }: EmbedVideoProps) {
         {status === "loading" && (
           <span className="video-buffering" role="status">
             <LoaderCircle className="spin" size={24} />
-            <span className="sr-only">Loading video player</span>
+            <span className="sr-only">{t("media.loadingPlayer")}</span>
           </span>
         )}
       </div>
@@ -80,7 +82,7 @@ export default function EmbedVideo({ src, poster, label }: EmbedVideoProps) {
         target="_blank"
         rel="noopener noreferrer"
       >
-        Open video in a new tab
+        {t("media.openNewTab")}
       </a>
     </div>
   );

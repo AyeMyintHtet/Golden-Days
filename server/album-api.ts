@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { createImageKitAlbum } from "./imagekit";
+import { beginLoginAttempt } from "./login-attempts";
 import {
   configurationReady,
   createSession,
@@ -86,6 +87,13 @@ export async function handleAlbumApi(
     return send(503, { error: "Album setup is incomplete." });
 
   if (action === "login") {
+    const attempt = beginLoginAttempt(request, env);
+    if (attempt.retryAfter > 0) {
+      response.setHeader("Retry-After", String(attempt.retryAfter));
+      return send(429, {
+        error: "Too many sign-in attempts. Please try again later.",
+      });
+    }
     try {
       const password = await readPassword(request);
       if (password === null)
@@ -94,6 +102,7 @@ export async function handleAlbumApi(
         return send(401, {
           error: "That password didn’t match. Please try again.",
         });
+      attempt.reset?.();
       const session = createSession(env);
       response.setHeader("Set-Cookie", sessionCookie(session.token, env));
       return send(200, { authenticated: true, expiresAt: session.expiresAt });

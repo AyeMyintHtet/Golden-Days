@@ -5,6 +5,7 @@ A mobile-first React family album with a cream, gold, and latte theme, dark mode
 ## Current setup
 
 - React 19, TypeScript, Vite, Motion, and Lucide.
+- `i18next` and `react-i18next`, with Burmese as the default and English as the secondary/fallback language.
 - Official `@imagekit/react` image/video components and `@imagekit/nodejs` server-side URL signing.
 - Vercel Node serverless function at `api/album.ts`. The same handler is available through Vite development middleware.
 - `server/media-index.json` includes 560 numbered files: 527 WebP photos and 33 MP4 videos. `327.mp4` is intentionally omitted at the owner's request; its local copy is unchanged. Other IDs are not renumbered. IDs remain stable when links expire or renew, so favorites and shared album links survive refreshes.
@@ -15,14 +16,14 @@ A mobile-first React family album with a cream, gold, and latte theme, dark mode
 
 `.env.local` is gitignored and excluded from Vercel source uploads. A local copy has been prepared with the endpoint and randomly generated family/session secrets. Keep these values private.
 
-| Variable                     | Purpose                                               | Visible to the browser? |
-| ---------------------------- | ----------------------------------------------------- | ----------------------- |
-| `VITE_MEDIA_URL`             | `/api/album`                                          | Yes                     |
-| `VITE_IMAGEKIT_URL_ENDPOINT` | `https://ik.imagekit.io/goldendays/`                  | Yes                     |
-| `VITE_AUTH_REQUIRED`         | `true` for the family album                           | Yes                     |
-| `IMAGEKIT_PRIVATE_KEY`       | ImageKit signing key                                  | No, server only         |
-| `ALBUM_PASSWORD`             | Shared family password, at least 16 characters        | No, server only         |
-| `ALBUM_SESSION_SECRET`       | Random session-signing secret, at least 32 characters | No, server only         |
+| Variable                     | Purpose                                                    | Visible to the browser? |
+| ---------------------------- | ---------------------------------------------------------- | ----------------------- |
+| `VITE_MEDIA_URL`             | `/api/album`                                               | Yes                     |
+| `VITE_IMAGEKIT_URL_ENDPOINT` | `https://ik.imagekit.io/goldendays/`                       | Yes                     |
+| `VITE_AUTH_REQUIRED`         | `true` for the family album                                | Yes                     |
+| `IMAGEKIT_PRIVATE_KEY`       | ImageKit signing key                                       | No, server only         |
+| `ALBUM_PASSWORD`             | Shared family password, 6–256 characters (16+ recommended) | No, server only         |
+| `ALBUM_SESSION_SECRET`       | Random session-signing secret, at least 32 characters      | No, server only         |
 
 Putting a value in an environment file does not make it secret if its name starts with `VITE_`. Never give private keys or passwords that prefix. Do not commit or share `.env.local`.
 
@@ -35,7 +36,29 @@ npm install
 npm run dev
 ```
 
-Restart your existing development server after changing environment variables. The app is available at the URL Vite prints. No development server or production build is started automatically.
+Restart your existing development server after changing environment variables. Vite listens on all network interfaces and prints both the local URL and available network URLs. For phone checks, connect the phone to the same network and open the printed network URL. No development server or production build is started automatically. PWA installation and service workers on a phone require HTTPS; a plain HTTP LAN URL is for UI checks.
+
+## Language and translations
+
+The app defaults to Burmese (`my`), with English (`en`) as its secondary language and missing-key fallback. The language is an owner-controlled code setting. There is no language button, browser-language detector, URL override, or saved language preference.
+
+To change the entire app to English, edit `APP_LANGUAGE` in `src/i18n/config.ts`:
+
+```ts
+export const APP_LANGUAGE: "my" | "en" = "en";
+```
+
+Use `"my"` for Burmese. Restart your development server after changing this setting and redeploy to update a hosted app.
+
+- `src/i18n/locales/my.json`: Burmese UI text.
+- `src/i18n/locales/en.json`: English UI text.
+- `src/i18n/index.ts`: bundled translations, React integration, English fallback, and interpolation.
+- Components use `useTranslation`; formatted headings and instructions use `Trans`. Download helpers and the error boundary use the same i18n instance.
+- Navigation, sign-in, notifications, downloads, install/offline/update messages, media labels, and accessibility text use these translations. Counts use locale-aware number formatting. Keep matching keys and interpolation placeholders in both locale files when editing text.
+- The HTML language, page title, description, Apple home-screen name, and PWA manifest are generated from the same code setting in `vite.config.ts`.
+- Burmese uses locally bundled Noto Sans Myanmar with extra line height and natural letter spacing. Fonts and translation resources are part of the app shell and available offline after installation. No third-party font or translation service is contacted.
+
+Device/browser names are retained in the install instructions, alongside the browser's English menu labels to help families find those controls. Native video controls and third-party iframe contents follow their browser/provider language; the app's own player labels and messages are translated.
 
 ## Required ImageKit settings
 
@@ -51,7 +74,11 @@ Reference: [ImageKit React SDK](https://imagekit.io/docs/integration/react), [Im
 
 The album requires one shared family password. The server verifies it and issues a seven-day, HMAC-authenticated session cookie with `HttpOnly`, `SameSite=Strict`, and `Secure` on Vercel/production. The cookie is scoped to `/api`. The browser never receives the cookie token in JSON or stores a password in local storage.
 
-Login and logout require same-origin POST requests. Other methods and cross-origin changes are rejected. Changing the family password or session secret invalidates existing sessions. Keep the generated high-entropy password; for additional abuse protection, Vercel Firewall can rate-limit the login endpoint.
+Login and logout require same-origin POST requests. Other methods and cross-origin changes are rejected. Changing the family password or session secret invalidates existing sessions. The password field requests a numeric keypad on Android and iOS. Six-digit family codes are supported, but a longer random numeric password is recommended.
+
+When the phone keyboard opens, `useKeyboardScroll` measures the visible viewport, leaves scroll space, and centers the password field above the keyboard. It restores the spacing as the keyboard closes, respects reduced motion, and removes its listeners when sign-in finishes. Actual keyboard behavior should be checked on iOS and Android.
+
+The server permits five failed sign-in attempts per client in a fifteen-minute window, then returns `429` with `Retry-After`. A successful sign-in clears that client's counter. This bounded, in-memory limit applies per server process; restarts clear it and Vercel function instances do not share counters. Before publicly deploying a short numeric code, configure a deployment-wide login rate limit with Vercel Firewall. On Vercel, the client address comes from its [platform-controlled forwarded header](https://vercel.com/docs/headers/request-headers); local development uses the socket address and ignores forwarded headers.
 
 Signed media URLs are valid for approximately 15–20 minutes. The app refreshes its manifest before expiry and when returning from the background. URL signatures remain unchanged when passed through the React SDK. Signatures are bearer access: a copied valid link can be used until it expires.
 
@@ -135,6 +162,8 @@ Project workflow: do not run `npm run build` as a test, and do not start localho
 
 - `api/album.ts`: Vercel entry point; `server/` owns authentication, signing, and the media index.
 - `AlbumAccess`: sign-in and session lifecycle; `album-session.ts` owns browser session requests and local-data cleanup.
+- `src/i18n/`: the code-only language setting, bundled Burmese/English translations, and i18n initialization.
+- `useKeyboardScroll`: phone keyboard viewport handling for the sign-in form.
 - `useMemories`: validated manifest loading, renewal, reconnects, and offline fallback.
 - `MediaImage`, `VideoPlayer`, and `AlbumIntro`: official React SDK integration with native lazy loading.
 - `MemoryLoader` and `MemoryScene`: delayed, isolated 3D loading with a static fallback.

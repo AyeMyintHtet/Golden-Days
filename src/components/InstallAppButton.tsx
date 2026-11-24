@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Download, LoaderCircle, X } from "lucide-react";
 import Dialog from "./Dialog";
 
@@ -15,37 +16,39 @@ function isStandalone() {
 }
 
 function InstallHelp({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <Dialog className="pwa-dialog" labelledBy="install-title" onClose={onClose}>
       <div className="pwa-dialog-content">
         <button
           className="icon-button pwa-dialog-close"
           onClick={onClose}
-          aria-label="Close install instructions"
+          aria-label={t("install.close")}
         >
           <X size={21} />
         </button>
         <img src="/icons/icon-192.png" width={64} height={64} alt="" />
-        <h2 id="install-title">Keep the good days close.</h2>
-        <p>Add Golden Days to your home screen and open it like an app.</p>
+        <h2 id="install-title">{t("install.title")}</h2>
+        <p>{t("install.description")}</p>
         <ol className="install-instructions">
           <li>
-            <strong>On iPhone or iPad</strong>
+            <strong>{t("install.iosTitle")}</strong>
             <span>
-              Open this page in Safari. Tap <b>Share</b>, then{" "}
-              <b>Add to Home Screen</b>.
+              <Trans i18nKey="install.iosSteps" components={{ bold: <b /> }} />
             </span>
           </li>
           <li>
-            <strong>On Android or a computer</strong>
+            <strong>{t("install.androidTitle")}</strong>
             <span>
-              Open your browser’s menu and choose <b>Install app</b> or{" "}
-              <b>Add to Home Screen</b>, when available.
+              <Trans
+                i18nKey="install.androidSteps"
+                components={{ bold: <b /> }}
+              />
             </span>
           </li>
         </ol>
         <button className="button button-gold" onClick={onClose}>
-          Got it
+          {t("install.gotIt")}
         </button>
       </div>
     </Dialog>
@@ -53,6 +56,7 @@ function InstallHelp({ onClose }: { onClose: () => void }) {
 }
 
 export default function InstallAppButton() {
+  const { t } = useTranslation();
   const [installed, setInstalled] = useState(isStandalone);
   const [installing, setInstalling] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -116,8 +120,8 @@ export default function InstallAppButton() {
       {!installed && (
         <button
           className="install-button"
-          aria-label="Install Golden Days"
-          title="Install Golden Days"
+          aria-label={t("install.label")}
+          title={t("install.label")}
           disabled={installing}
           onClick={install}
         >
@@ -126,7 +130,7 @@ export default function InstallAppButton() {
           ) : (
             <Download size={17} aria-hidden="true" />
           )}
-          <span>Install</span>
+          <span>{t("install.button")}</span>
         </button>
       )}
       {showHelp && <InstallHelp onClose={() => setShowHelp(false)} />}

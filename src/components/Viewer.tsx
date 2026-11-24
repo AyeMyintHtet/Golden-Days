@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   ChevronRight,
@@ -30,6 +31,7 @@ interface ViewerProps {
 }
 
 export default function Viewer(props: ViewerProps) {
+  const { t } = useTranslation();
   const index = props.items.findIndex(
     (memory) => memory.id === props.currentId,
   );
@@ -75,7 +77,10 @@ export default function Viewer(props: ViewerProps) {
 
   if (!memory) return null;
   const favorite = props.favorites.includes(memory.id);
-  const label = `${memory.kind === "video" ? "Video" : "Photo"} ${index + 1}`;
+  const label = t(
+    memory.kind === "video" ? "media.videoLabel" : "media.photoLabel",
+    { number: index + 1 },
+  );
   const src = resolveMediaUrl(memory.src);
   const embedded = isEmbeddedVideo(memory);
   const downloadable = Boolean(getDownloadUrl(memory));
@@ -92,18 +97,19 @@ export default function Viewer(props: ViewerProps) {
       >
         <header className="viewer-header">
           <div>
-            <span className="viewer-eyebrow">BANGKOK, TOGETHER</span>
+            <span className="viewer-eyebrow">{t("app.together")}</span>
             <span className="viewer-counter">
-              {index + 1} <span>/ {props.items.length}</span>
+              {t("common.number", { value: index + 1 })}{" "}
+              <span>/ {t("common.number", { value: props.items.length })}</span>
             </span>
           </div>
           <div className="viewer-actions">
             <button
               className={`icon-button ${favorite ? "is-favorite" : ""}`}
               onClick={() => props.onFavorite(memory.id)}
-              aria-label={
-                favorite ? "Remove from favorites" : "Add to favorites"
-              }
+              aria-label={t(
+                favorite ? "viewer.removeFavorite" : "viewer.addFavorite",
+              )}
               aria-pressed={favorite}
             >
               <Heart size={20} fill={favorite ? "currentColor" : "none"} />
@@ -112,7 +118,7 @@ export default function Viewer(props: ViewerProps) {
               <button
                 className="icon-button"
                 onClick={() => props.onDownload([memory])}
-                aria-label="Download this memory"
+                aria-label={t("viewer.download")}
               >
                 <Download size={20} />
               </button>
@@ -120,7 +126,7 @@ export default function Viewer(props: ViewerProps) {
             <button
               className="icon-button"
               onClick={() => props.onShare(memory)}
-              aria-label="Share this memory"
+              aria-label={t("viewer.share")}
             >
               <Share2 size={19} />
             </button>
@@ -128,7 +134,7 @@ export default function Viewer(props: ViewerProps) {
             <button
               className="icon-button"
               onClick={props.onClose}
-              aria-label="Close viewer"
+              aria-label={t("viewer.close")}
             >
               <X size={23} />
             </button>
@@ -147,7 +153,7 @@ export default function Viewer(props: ViewerProps) {
             >
               {!src ? (
                 <div className="viewer-error">
-                  <p>This media link is unavailable.</p>
+                  <p>{t("media.unavailable")}</p>
                 </div>
               ) : embedded ? (
                 <EmbedVideo
@@ -173,14 +179,14 @@ export default function Viewer(props: ViewerProps) {
               <button
                 className="viewer-nav previous"
                 onClick={() => step(-1)}
-                aria-label="Previous memory"
+                aria-label={t("viewer.previous")}
               >
                 <ChevronLeft size={26} />
               </button>
               <button
                 className="viewer-nav next"
                 onClick={() => step(1)}
-                aria-label="Next memory"
+                aria-label={t("viewer.next")}
               >
                 <ChevronRight size={26} />
               </button>
@@ -191,13 +197,20 @@ export default function Viewer(props: ViewerProps) {
         <nav
           ref={filmstrip}
           className="viewer-filmstrip"
-          aria-label="Choose a memory"
+          aria-label={t("viewer.choose")}
         >
           {stripItems.map((item, itemIndex) => (
             <button
               key={item.id}
               className={`filmstrip-item ${item.id === memory.id ? "active" : ""}`}
-              aria-label={`View ${item.kind === "video" ? "video" : "photo"} ${stripStart + itemIndex + 1}`}
+              aria-label={t("media.open", {
+                label: t(
+                  item.kind === "video"
+                    ? "media.videoLabel"
+                    : "media.photoLabel",
+                  { number: stripStart + itemIndex + 1 },
+                ),
+              })}
               aria-current={item.id === memory.id ? "true" : undefined}
               onClick={() => props.onChange(item.id)}
             >

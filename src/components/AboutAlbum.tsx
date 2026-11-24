@@ -1,38 +1,36 @@
 import { Heart, Sun, X } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 import Dialog from "./Dialog";
 
 export default function AboutAlbum({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <Dialog className="about-dialog" onClose={onClose} labelledBy="about-title">
       <div className="about-content">
         <button
           className="icon-button about-close"
           onClick={onClose}
-          aria-label="Close album information"
+          aria-label={t("about.close")}
         >
           <X size={21} />
         </button>
         <span className="about-sun">
           <Sun size={37} strokeWidth={1.2} />
         </span>
-        <span className="eyebrow">A LITTLE HOME FOR THE GOOD DAYS</span>
+        <span className="eyebrow">{t("about.eyebrow")}</span>
         <h2 id="about-title">
-          Some things deserve
-          <br />
-          to be kept <em>close.</em>
+          <Trans i18nKey="about.title" />
         </h2>
-        <p>
-          A place to wander back to our favorite days. The big adventures, the
-          little detours, and everything in between.
-        </p>
+        <p>{t("about.description")}</p>
         <div className="about-note">
-          <strong>Bangkok, together.</strong>
-          <p>
-            Photos, videos, and little moments from the days we spent together.
-          </p>
+          <strong>{t("app.together")}</strong>
+          <p>{t("about.note")}</p>
         </div>
         <span className="about-signoff">
-          Made with <Heart size={14} /> for our family
+          <Trans
+            i18nKey="about.signoff"
+            components={{ heart: <Heart size={14} /> }}
+          />
         </span>
       </div>
     </Dialog>

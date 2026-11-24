@@ -12,7 +12,8 @@ export type AlbumEnvironment = Record<string, string | undefined>;
 export function configurationReady(env: AlbumEnvironment) {
   return Boolean(
     env.IMAGEKIT_PRIVATE_KEY?.trim() &&
-    (env.ALBUM_PASSWORD?.length ?? 0) >= 16 &&
+    (env.ALBUM_PASSWORD?.length ?? 0) >= 6 &&
+    (env.ALBUM_PASSWORD?.length ?? 0) <= 256 &&
     (env.ALBUM_SESSION_SECRET?.length ?? 0) >= 32 &&
     /^https:\/\/ik\.imagekit\.io\/[a-zA-Z0-9_-]+\/?$/.test(
       env.VITE_IMAGEKIT_URL_ENDPOINT ?? "",

@@ -1,4 +1,5 @@
 import { LoaderCircle, WifiOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface PwaStatusProps {
   online: boolean;
@@ -19,29 +20,24 @@ export default function PwaStatus({
   onLater,
   onRetry,
 }: PwaStatusProps) {
+  const { t } = useTranslation();
   if (online && !needsUpdate && !usingSavedAlbum) return null;
   return (
     <div className="pwa-status" role="status" aria-live="polite">
       {!online || usingSavedAlbum ? (
         <>
           <WifiOff size={18} aria-hidden="true" />
-          <p>
-            {online
-              ? "Showing your saved album."
-              : "You’re offline. Saved photos are still available."}
-          </p>
+          <p>{online ? t("pwa.saved") : t("pwa.offline")}</p>
           {online && (
             <button className="button button-outline" onClick={onRetry}>
-              Retry connection
+              {t("pwa.retry")}
             </button>
           )}
         </>
       ) : (
         <>
           <p>
-            {status === "error"
-              ? "The update couldn’t finish. Please try again."
-              : "A fresh version of Golden Days is ready."}
+            {status === "error" ? t("pwa.updateError") : t("pwa.updateReady")}
           </p>
           <div className="pwa-status-actions">
             <button
@@ -52,14 +48,14 @@ export default function PwaStatus({
               {status === "updating" && (
                 <LoaderCircle size={16} className="spin" />
               )}
-              {status === "error" ? "Try again" : "Update"}
+              {t(status === "error" ? "common.tryAgain" : "pwa.update")}
             </button>
             <button
               className="button button-outline"
               disabled={status === "updating"}
               onClick={onLater}
             >
-              Later
+              {t("common.later")}
             </button>
           </div>
         </>

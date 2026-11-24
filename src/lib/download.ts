@@ -1,6 +1,9 @@
 import type { Memory } from "../data/memories";
 import { getDownloadUrl } from "./media";
 import { imageKitSource } from "./imagekit";
+import i18n from "../i18n";
+
+class DownloadError extends Error {}
 
 function saveBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -67,12 +70,11 @@ export async function downloadMemories(
     }
   }
   const maxBytes = 32 * 1024 * 1024;
-  const limitMessage =
-    "Choose fewer or smaller files: up to 20 files and 32 MB per download.";
-  if (items.length > 20) throw new Error(limitMessage);
+  const limitMessage = i18n.t("download.limit");
+  if (items.length > 20) throw new DownloadError(limitMessage);
   const urls = items.map((memory) => {
     const url = getDownloadUrl(memory);
-    if (!url) throw new Error("This video does not have a downloadable file.");
+    if (!url) throw new DownloadError(i18n.t("download.noFile"));
     return { memory, url };
   });
   const controller = new AbortController();
@@ -81,24 +83,21 @@ export async function downloadMemories(
   let completed = 0;
   async function fetchFile(url: string) {
     const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok)
-      throw new Error("This file could not be downloaded. Please try again.");
+    if (!response.ok) throw new DownloadError(i18n.t("download.fileError"));
     const contentType =
       response.headers.get("Content-Type")?.toLowerCase() ?? "";
     if (
       contentType.includes("text/html") ||
       contentType.includes("application/json")
     ) {
-      throw new Error(
-        "This link opens a page instead of a downloadable media file.",
-      );
+      throw new DownloadError(i18n.t("download.pageLink"));
     }
     const declaredBytes = Number(response.headers.get("Content-Length"));
     if (
       Number.isFinite(declaredBytes) &&
       declaredBytes > maxBytes - receivedBytes
     )
-      throw new Error(limitMessage);
+      throw new DownloadError(limitMessage);
     let blob: Blob;
     if (response.body) {
       const reader = response.body.getReader();
@@ -108,7 +107,7 @@ export async function downloadMemories(
           const { done, value } = await reader.read();
           if (done) break;
           receivedBytes += value.byteLength;
-          if (receivedBytes > maxBytes) throw new Error(limitMessage);
+          if (receivedBytes > maxBytes) throw new DownloadError(limitMessage);
           chunks.push(value);
         }
         blob = new Blob(chunks, { type: contentType });
@@ -117,13 +116,13 @@ export async function downloadMemories(
       }
     } else {
       // Do not buffer an unknown-size file on browsers without streaming bodies.
-      if (!(declaredBytes > 0)) throw new Error(limitMessage);
+      if (!(declaredBytes > 0)) throw new DownloadError(limitMessage);
       blob = await response.blob();
       receivedBytes += blob.size;
-      if (receivedBytes > maxBytes) throw new Error(limitMessage);
+      if (receivedBytes > maxBytes) throw new DownloadError(limitMessage);
     }
     if (controller.signal.aborted)
-      throw new DOMException("Download cancelled", "AbortError");
+      throw new DOMException(i18n.t("download.error"), "AbortError");
     onProgress?.(++completed, items.length);
     return blob;
   }
@@ -160,10 +159,10 @@ export async function downloadMemories(
     );
   } catch (error) {
     if (controller.signal.aborted)
-      throw new Error(
-        "The download took too long. Please try a smaller selection.",
-      );
-    throw error;
+      throw new DownloadError(i18n.t("download.timeout"));
+    throw error instanceof DownloadError
+      ? error
+      : new DownloadError(i18n.t("download.error"));
   } finally {
     window.clearTimeout(timeout);
     controller.abort();

@@ -87,6 +87,7 @@
   min-height: 100vh;
   min-height: 100dvh;
   padding: 80px 20px 40px;
+  padding-bottom: calc(40px + var(--keyboard-scroll-space, 0px));
   display: grid;
   place-items: center;
   background:
@@ -117,7 +118,7 @@
   font-size: 0.625rem;
 }
 .access-card h1 {
-  font-family: "Cormorant Garamond", serif;
+  font-family: var(--font-display);
   font-weight: 500;
   font-size: clamp(2.8rem, 10vw, 4.2rem);
   line-height: 0.98;
@@ -194,7 +195,9 @@
 }
 
 :root {
-  font-family: "DM Sans", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+  --font-display: "Cormorant Garamond", serif;
+  font-family: var(--font-body);
   font-synthesis: none;
   font-weight: 500;
   color: var(--ink);
@@ -292,7 +295,7 @@ body,
 button,
 input,
 select {
-  font-family: "DM Sans", sans-serif;
+  font-family: var(--font-body);
 }
 button,
 input,
@@ -486,7 +489,7 @@ p {
   color: #a9813f;
 }
 .brand > span:last-child {
-  font-family: "Cormorant Garamond", serif;
+  font-family: var(--font-display);
   font-size: 1.95rem;
   font-weight: 600;
   letter-spacing: -0.07em;
@@ -497,7 +500,7 @@ p {
 }
 .brand small {
   display: block;
-  font-family: "DM Sans", sans-serif;
+  font-family: var(--font-body);
   font-size: 0.48rem;
   font-weight: 500;
   letter-spacing: 0.16em;
@@ -568,7 +571,7 @@ p {
 .postcard-photo > span {
   display: block;
   text-align: center;
-  font-family: "Cormorant Garamond", serif;
+  font-family: var(--font-display);
   font-style: italic;
   font-size: 1rem;
   line-height: 1;
@@ -681,7 +684,7 @@ h1 {
   align-items: center;
   gap: 9px;
   flex-wrap: wrap;
-  font-family: "Cormorant Garamond", serif;
+  font-family: var(--font-display);
   font-size: clamp(2.4rem, 7.4vw, 3.4rem);
   letter-spacing: -0.045em;
   font-weight: 600;
@@ -748,7 +751,7 @@ h1 em {
   letter-spacing: 0.15em;
 }
 .library-heading h2 {
-  font-family: "Cormorant Garamond", serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 1.65rem;
   line-height: 1.2;
@@ -1025,7 +1028,7 @@ h1 em {
   margin-bottom: 18px;
 }
 .empty-state h2 {
-  font-family: "Cormorant Garamond", serif;
+  font-family: var(--font-display);
   font-size: 2rem;
 }
 .empty-state p {
@@ -1046,7 +1049,7 @@ h1 em {
   color: #b79967;
 }
 .album-footer > span {
-  font-family: "Cormorant Garamond", serif;
+  font-family: var(--font-display);
   font-size: 0.875rem;
 }
 .album-footer > small {
@@ -1180,7 +1183,7 @@ h1 em {
   margin-bottom: 20px;
 }
 .pwa-dialog h2 {
-  font-family: "Cormorant Garamond", serif;
+  font-family: var(--font-display);
   font-size: 2rem;
   line-height: 1.1;
   margin-bottom: 12px;
@@ -1569,7 +1572,7 @@ h1 em {
   font-size: 0.5rem;
 }
 .about-content h2 {
-  font-family: "Cormorant Garamond", serif;
+  font-family: var(--font-display);
   font-size: 2.5rem;
   line-height: 1.05;
   margin: 17px 0;
@@ -1960,7 +1963,7 @@ h1 em {
     display: block;
     text-align: center;
     margin-top: 8px;
-    font-family: "Cormorant Garamond", serif;
+    font-family: var(--font-display);
     font-style: italic;
     font-size: 0.8125rem;
   }
@@ -2401,7 +2404,7 @@ h1 em {
   text-align: center;
 }
 .app-error h1 {
-  font-family: "Cormorant Garamond", serif;
+  font-family: var(--font-display);
   font-size: 2rem;
 }
 .app-error p {
@@ -2446,4 +2449,94 @@ h1 em {
   .memory-card:hover .memory-open .media-image img {
     transform: none;
   }
+}
+
+/* Burmese needs more vertical room for stacked characters and natural spacing. */
+:root[lang="my"] {
+  --font-body: "Noto Sans Myanmar", "DM Sans", sans-serif;
+  --font-display: "Noto Sans Myanmar", "DM Sans", sans-serif;
+  line-height: 1.8;
+}
+:root[lang="my"] :is(h1, h2) {
+  letter-spacing: normal;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+:root[lang="my"] em {
+  font-style: normal;
+}
+:root[lang="my"]
+  :is(
+    .eyebrow,
+    .brand > span,
+    .brand small,
+    .sidebar-section-label,
+    .viewer-eyebrow,
+    .album-footer small
+  ) {
+  letter-spacing: normal;
+  text-transform: none;
+}
+:root[lang="my"]
+  :is(.eyebrow, .sidebar-section-label, .viewer-eyebrow, .album-footer small) {
+  font-size: 0.65rem;
+}
+:root[lang="my"] .access-card h1 {
+  display: block;
+  font-size: clamp(1.25rem, 5.5vw, 1.8rem);
+}
+:root[lang="my"] .intro-copy h1 {
+  font-size: clamp(1.6rem, 5.5vw, 2.6rem);
+}
+:root[lang="my"] .library-heading h2 {
+  font-size: clamp(1.1rem, 4.5vw, 1.65rem);
+}
+:root[lang="my"] :is(.about-content h2, .pwa-dialog-content h2, .app-error h1) {
+  font-size: clamp(1.3rem, 5vw, 1.9rem);
+}
+:root[lang="my"] .brand > span:last-child {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+:root[lang="my"] .brand small {
+  font-size: 0.6rem;
+  margin-top: 4px;
+}
+:root[lang="my"] .postcard-photo > span {
+  font-size: 0.875rem;
+  line-height: 1.9;
+}
+:root[lang="my"] .topbar-title {
+  white-space: normal;
+  line-height: 1.8;
+}
+:root[lang="my"] .topbar-right {
+  gap: 8px;
+}
+:root[lang="my"] .mobile-nav button {
+  font-size: 0.7rem;
+  line-height: 1.8;
+  min-height: 56px;
+}
+:root[lang="my"] .viewer-header > div:first-child {
+  min-width: 0;
+}
+:root[lang="my"] .viewer-eyebrow {
+  overflow-wrap: anywhere;
+}
+:root[lang="my"] :is(.selection-toolbar, .album-meta) {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+:root[lang="my"]
+  :is(
+    .access-card > p,
+    .access-message,
+    .about-content p,
+    .pwa-dialog-content p,
+    .install-instructions span,
+    .pwa-status p,
+    .toast
+  ) {
+  line-height: 1.9;
 }

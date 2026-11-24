@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { Trans, useTranslation } from "react-i18next";
 import { Heart, Images, Sparkles, Sun } from "lucide-react";
 import type { Memory } from "../data/memories";
 import MediaImage from "./MediaImage";
@@ -16,37 +17,42 @@ export default function AlbumIntro({
   loading,
   onOpen,
 }: AlbumIntroProps) {
+  const { t } = useTranslation();
   return (
     <motion.section
       className="album-intro"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55 }}
-      aria-label="Bangkok trip introduction"
+      aria-label={t("intro.label")}
     >
       <div className="intro-copy">
         <span className="eyebrow">
-          <span className="little-line" /> ONE CITY. SO MANY LITTLE MEMORIES.
+          <span className="little-line" /> {t("intro.eyebrow")}
         </span>
         <h1>
-          Bangkok, <em>together.</em>
+          <Trans i18nKey="intro.title" />
           <span className="heading-sparkle">
             <Sparkles size={34} strokeWidth={1.1} />
           </span>
         </h1>
         <p>
-          The places we went. The things we laughed at.
-          <br className="desktop-break" /> The days we’ll keep coming back to.
+          <Trans
+            i18nKey="intro.description"
+            components={{ br: <br className="desktop-break" /> }}
+          />
         </p>
         <div className="album-meta">
           <span>
             <Images size={15} />
-            {loading ? "Opening your album…" : `${total} little memories`}
+            {loading
+              ? t("access.openingAlbum")
+              : t("intro.count", { count: total })}
           </span>
           <span className="meta-dot">·</span>
           <span>
             <Heart size={14} />
-            One happy family
+            {t("intro.family")}
           </span>
         </div>
       </div>
@@ -54,7 +60,7 @@ export default function AlbumIntro({
         <button
           className="intro-postcards"
           onClick={() => onOpen(photos[0].id)}
-          aria-label="Open the Bangkok photo album"
+          aria-label={t("intro.openAlbum")}
         >
           <span className="postcard postcard-back">
             <MediaImage
@@ -66,7 +72,7 @@ export default function AlbumIntro({
               loading="lazy"
               fetchPriority="low"
             />
-            <span>little adventures</span>
+            <span>{t("intro.adventures")}</span>
           </span>
           <span className="postcard postcard-front">
             <MediaImage
@@ -75,7 +81,7 @@ export default function AlbumIntro({
               loading="lazy"
               fetchPriority="low"
             />
-            <span>Bangkok, with love ♡</span>
+            <span>{t("intro.withLove")}</span>
           </span>
           <span className="postcards-orbit">
             <Sun size={29} strokeWidth={1.2} />

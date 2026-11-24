@@ -1,4 +1,5 @@
 import { Camera, Film, Heart, Images, Sun } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 import type { Collection, MediaFilter } from "../data/memories";
 
 interface SidebarProps {
@@ -11,20 +12,23 @@ interface SidebarProps {
 }
 
 export function Brand() {
+  const { t } = useTranslation();
   return (
-    <a className="brand" href="#main" aria-label="Golden Days home">
+    <a className="brand" href="#main" aria-label={t("app.home")}>
       <span className="brand-icon">
         <Sun size={26} strokeWidth={1.5} />
       </span>
       <span>
-        golden days<span className="brand-period">.</span>
-        <small>A LITTLE CLOSER, ALWAYS</small>
+        {t("app.name")}
+        <span className="brand-period">{t("common.fullStop")}</span>
+        <small>{t("app.tagline")}</small>
       </span>
     </a>
   );
 }
 
 export default function Sidebar(props: SidebarProps) {
+  const { t } = useTranslation();
   const {
     collection,
     kind,
@@ -35,28 +39,28 @@ export default function Sidebar(props: SidebarProps) {
   } = props;
   const links = [
     {
-      label: "All memories",
+      label: t("nav.all"),
       icon: Images,
       count: photoCount + videoCount,
       collection: "all" as const,
       kind: "all" as const,
     },
     {
-      label: "Photos",
+      label: t("nav.photos"),
       icon: Camera,
       count: photoCount,
       collection: "all" as const,
       kind: "photo" as const,
     },
     {
-      label: "Videos",
+      label: t("nav.videos"),
       icon: Film,
       count: videoCount,
       collection: "all" as const,
       kind: "video" as const,
     },
     {
-      label: "Favorites",
+      label: t("nav.favorites"),
       icon: Heart,
       count: favoriteCount,
       collection: "favorites" as const,
@@ -65,13 +69,13 @@ export default function Sidebar(props: SidebarProps) {
   ];
 
   return (
-    <aside className="sidebar" aria-label="Album navigation">
+    <aside className="sidebar" aria-label={t("nav.album")}>
       <div className="sidebar-brand">
         <Brand />
       </div>
 
-      <div className="sidebar-section-label">YOUR LITTLE WORLD</div>
-      <nav className="library-nav" aria-label="Library">
+      <div className="sidebar-section-label">{t("nav.yourWorld")}</div>
+      <nav className="library-nav" aria-label={t("nav.library")}>
         {links.map(
           ({
             label,
@@ -92,7 +96,9 @@ export default function Sidebar(props: SidebarProps) {
               >
                 <Icon size={19} strokeWidth={1.65} />
                 <span>{label}</span>
-                <span className="nav-count">{count}</span>
+                <span className="nav-count">
+                  {t("common.number", { value: count })}
+                </span>
               </button>
             );
           },
@@ -109,9 +115,7 @@ export default function Sidebar(props: SidebarProps) {
             fetchPriority="low"
           />
           <span>
-            the good old days
-            <br />
-            are happening now.
+            <Trans i18nKey="nav.postcard" />
           </span>
         </div>
         <span className="postcard-tape" />

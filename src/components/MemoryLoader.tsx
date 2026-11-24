@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { useReducedMotion } from "motion/react";
+import { useTranslation } from "react-i18next";
 
 const MemoryScene = lazy(() => import("./MemoryScene"));
 
@@ -28,12 +29,13 @@ class SceneBoundary extends Component<
 }
 
 export default function MemoryLoader({
-  label = "Opening this memory…",
+  label,
   compact = false,
 }: {
   label?: string;
   compact?: boolean;
 }) {
+  const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const [delayed, setDelayed] = useState(false);
   const [ready, setReady] = useState(false);
@@ -79,7 +81,7 @@ export default function MemoryLoader({
         )}
       </span>
       <span className={compact ? "sr-only" : "memory-loader__label"}>
-        {label}
+        {label ?? t("media.opening")}
       </span>
     </span>
   );
